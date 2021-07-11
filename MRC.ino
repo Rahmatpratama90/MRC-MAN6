@@ -1,4 +1,4 @@
-m#include <Wire.h>
+#include <Wire.h>
 #include "MAX30105.h"
 #include <Adafruit_MLX90614.h>
 #include <LiquidCrystal.h>
@@ -7,56 +7,41 @@ MAX30105 particleSensor; // initialize MAX30102 with I2C
 Adafruit_MLX90614 mlx = Adafruit_MLX90614();
 LiquidCrystal lcd(7, 6, 5, 4, 3, 2);
 Servo myservo;
-
+#define USEFIFO
+uint32_t ir, red , green;
+double fred, fir;
+double SpO2 = 0; //raw SpO2 before low pass filtered
 //inisialisasi Global Variabel untuk Oximeternya
 double avered = 0; 
 double aveir = 0;
 double sumirrms = 0;
 double sumredrms = 0;
+double celsius;
 double frate = 0.95; //low pass filter for IR/red LED value to eliminate AC component
-#define USEFIFO
-
-float celsius;
+byte ledBrightness = 70; //Options: 0=Off to 255=50mA
+byte sampleAverage = 1; //Options: 1, 2, 4, 8, 16, 32
+byte ledMode = 2; //Options: 1 = Red only, 2 = Red + IR, 3 = Red + IR + Green
+int sampleRate = 400; //Options: 50, 100, 200, 400, 800, 1000, 1600, 3200
+int pulseWidth = 69; //Options: 69, 118, 215, 411
+int adcRange = 16384; //Options: 2048, 4096, 8192, 16384
 
 void setup()
 {
   Serial.begin(115200);
-  //while(!Serial); //We must wait for Teensy to come online
-  //delay(100);
-  //Serial.println("");
-  //Serial.println("MAX30102");
-  //Serial.println("");
-  //delay(100);
   // Initialize sensor
   particleSensor.begin(Wire, I2C_SPEED_FAST); //Use default I2C port, 400kHz speed
-
-  byte ledBrightness = 70; //Options: 0=Off to 255=50mA
-  byte sampleAverage = 1; //Options: 1, 2, 4, 8, 16, 32
-  byte ledMode = 2; //Options: 1 = Red only, 2 = Red + IR, 3 = Red + IR + Green
-  int sampleRate = 400; //Options: 50, 100, 200, 400, 800, 1000, 1600, 3200
-  int pulseWidth = 69; //Options: 69, 118, 215, 411
-  int adcRange = 16384; //Options: 2048, 4096, 8192, 16384
-
   particleSensor.setup(ledBrightness, sampleAverage, ledMode, sampleRate, pulseWidth, adcRange); //Configure sensor with these settings
-
-  Serial.begin(9600); //Seriar untuk Oximeternya
-  lcd.begin(16, 2);
-  mlx.begin();
-
-  myservo.attach(8);
-  pinMode(10, OUTPUT);
+  lcd.begin(16, 2); //inisialisasi lcd
+  mlx.begin(); //mlx nya di begin
+  myservo.attach(8); //servo nya di attach dengan mengambil pin 8 sebagai pin nya
+  pinMode(10, OUTPUT); //pinmOde 10-13 sebagai outputnya
   pinMode(11, OUTPUT);
   pinMode(12, OUTPUT);
   pinMode(13,OUTPUT);
 }
  
-void loop() {
-  uint32_t ir, red , green;
-  double fred, fir;
-  double SpO2 = 0; //raw SpO2 before low pass filtered
-
+void loop() {  //masuk ke program utama
   particleSensor.check(); //Check the sensor
-
   red = particleSensor.getFIFORed(); //why getFOFOIR output Red data by MAX30102 on MH-ET LIVE breakout board
   ir = particleSensor.getFIFOIR(); //why getFIFORed output IR data by MAX30102 on MH-ET LIVE breakout board
 
