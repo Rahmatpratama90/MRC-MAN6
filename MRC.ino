@@ -10,13 +10,13 @@ Servo myservo;
 #define USEFIFO
 uint32_t ir, red , green;
 double fred, fir;
-double SpO2 = 0; //raw SpO2 before low pass filtered
+float SpO2 = 0; //raw SpO2 before low pass filtered
 //inisialisasi Global Variabel untuk Oximeternya
 double avered = 0; 
 double aveir = 0;
 double sumirrms = 0;
 double sumredrms = 0;
-double celsius;
+float celsius ;
 double frate = 0.95; //low pass filter for IR/red LED value to eliminate AC component
 byte ledBrightness = 70; //Options: 0=Off to 255=50mA
 byte sampleAverage = 1; //Options: 1, 2, 4, 8, 16, 32
@@ -31,13 +31,13 @@ void setup()
   // Initialize sensor
   particleSensor.begin(Wire, I2C_SPEED_FAST); //Use default I2C port, 400kHz speed
   particleSensor.setup(ledBrightness, sampleAverage, ledMode, sampleRate, pulseWidth, adcRange); //Configure sensor with these settings
-  lcd.begin(16, 2); //inisialisasi lcd
+  lcd.begin(20, 4); //inisialisasi lcd
   mlx.begin(); //mlx nya di begin
   myservo.attach(8); //servo nya di attach dengan mengambil pin 8 sebagai pin nya
   pinMode(10, OUTPUT); //pinmOde 10-13 sebagai outputnya
-  pinMode(11, OUTPUT);
+  pinMode(11, OUTPUT); 
   pinMode(12, OUTPUT);
-  pinMode(13,OUTPUT);
+  pinMode(13, OUTPUT);
 }
  
 void loop() {  //masuk ke program utama
@@ -63,20 +63,30 @@ void loop() {  //masuk ke program utama
 
   celsius = mlx.readObjectTempC();
   celsius = celsius + 2;
+
+  if (celsius <= 35.3){
+     Serial.println("Suhu dibawah 35.3 :");
+     Serial.println(celsius,1);
+    myservo.write(90);
+     
   lcd.setCursor(0, 0);
   lcd.print("SuhuBdn :");
-  lcd.print(celsius);
+  lcd.print(celsius,1);
   lcd.print("C"); 
 
   lcd.setCursor(0, 1);
   lcd.print("SpO2    :");
-  lcd.print(SpO2);
+  lcd.print(SpO2,1);
   lcd.print("%");
+  
+    lcd.setCursor(0, 2);
+  lcd.print("Letakkan jari");
 
-  if (celsius <= 35.3){
-     Serial.println("Suhu dibawah 35.3 :");
-     Serial.println(celsius);
-    myservo.write(-15);
+
+  lcd.setCursor(0, 3);
+  lcd.print("Pada sensor");
+
+    lcd.clear();
     digitalWrite(10, HIGH); //LED YELLOW
     digitalWrite(11, LOW); // LED BLUE
     digitalWrite(12, LOW);// LED RED
@@ -84,10 +94,30 @@ void loop() {  //masuk ke program utama
   }
 
   if (celsius <= 37.6 && celsius >= 35.4){
-      myservo.write(75);
+      myservo.write(180
+      );
     Serial.println("Suhu diantara 35.4 s/d 37.6 :");
-     Serial.println(celsius);
-    delay(15);
+     Serial.println(celsius,1);
+   
+  lcd.setCursor(0, 0);
+  lcd.print("SuhuBdn :");
+  lcd.print(celsius,1);
+  lcd.print("C"); 
+
+  lcd.setCursor(0, 1);
+  lcd.print("SpO2    :");
+  lcd.print(SpO2,1);
+  lcd.print("%");
+
+      lcd.setCursor(0, 2);
+  lcd.print("Anda ");
+
+
+  lcd.setCursor(0, 3);
+  lcd.print("Dipersilakan masuk");
+ 
+  lcd.clear();
+    //delay(15);
     digitalWrite(10, LOW); // LED YELLOW
     digitalWrite(11, HIGH);//LED BLUE
     digitalWrite(12, LOW);// LED RED
@@ -97,14 +127,33 @@ void loop() {  //masuk ke program utama
 
   if(celsius >= 37.7) {
     Serial.println("Suhu diatas 37.7 :" );
-    Serial.println(celsius);
-    myservo.write(-15);
-    delay(15);
+    Serial.println(celsius,1);
+    myservo.write(90);
+
+    lcd.setCursor(0, 0);
+  lcd.print("SuhuBdn :");
+  lcd.print(celsius,1);
+  lcd.print("C"); 
+
+  lcd.setCursor(0, 1);
+  lcd.print("SpO2    :");
+  lcd.print(SpO2,1);
+  lcd.print("%");
+      lcd.setCursor(0, 2);
+  lcd.print("Anda ");
+
+
+  lcd.setCursor(0, 3);
+  lcd.print("Dilarang masuk");
+ 
+  
+    lcd.clear();
+    //delay(15);
     digitalWrite(10, LOW);  // LED YELLOW
     digitalWrite(11, LOW);  //LED BLUE
     digitalWrite(12, HIGH); // LED RED
     digitalWrite(13, HIGH); // Buzzer
-    delay(15);
+   // delay(15);
   }
 
   } 
